@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Typing Tutor</title>
+  <style>
+    :root {
+      --bg-primary: #f8f9fa;
+      --bg-secondary: #ffffff;
+      --text-primary: #212529;
+      --text-secondary: #6c757d;
+      --accent: #4361ee;
+      --accent-light: #e8f0fe;
+      --correct: #28a745;
+      --wrong: #dc3545;
+      --border: #dee2e6;
+      --shadow: rgba(0, 0, 0, 0.1);
+      --input-bg: #ffffff;
+    }
+
+    .dark-mode {
+      --bg-primary: #121212;
+      --bg-secondary: #1e1e1e;
+      --text-primary: #e6e6e6;
+      --text-secondary: #a0a0a0;
+      --accent: #5f7fff;
+      --accent-light: #2c2c3d;
+      --correct: #4caf50;
+      --wrong: #f44336;
+      --border: #2d2d2d;
+      --shadow: rgba(0, 0, 0, 0.3);
+      --input-bg: #2d2d2d;
+    }
+
+    * {
+      box-sizing: border-box;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      width: 100%;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    h1 {
+      margin: 0;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .theme-toggle {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 24px;
+      color: var(--text-secondary);
+      padding: 5px;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .theme-toggle:hover {
+      background-color: var(--accent-light);
+    }
+
+    .card {
+      background-color: var(--bg-secondary);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 6px var(--shadow);
+      margin-bottom: 20px;
+    }
+
+    .chapter-selector {
+      width: 100%;
+      padding: 12px 15px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background-color: var(--input-bg);
+      color: var(--text-primary);
+      font-size: 16px;
+      margin-bottom: 10px;
+      appearance: none;
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      background-size: 16px;
+    }
+
+    .lesson-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      color: var(--accent);
+      text-align: center;
+    }
+
+    .lesson-container {
+      min-height: 80px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 20px;
+      padding: 15px;
+      border-radius: 8px;
+      background-color: var(--accent-light);
+    }
+
+    .char {
+      display: inline-block;
+      padding: 5px;
+      font-size: 24px;
+      font-family: 'Courier New', monospace;
+      margin: 0 2px;
+      border-bottom: 2px solid var(--border);
+      min-width: 20px;
+      text-align: center;
+    }
+
+    .correct {
+      color: var(--correct);
+      border-bottom-color: var(--correct);
+    }
+
+    .wrong {
+      color: var(--wrong);
+      border-bottom-color: var(--wrong);
+      background-color: rgba(220, 53, 69, 0.1);
+      border-radius: 3px;
+    }
+
+    .input-container {
+      position: relative;
+      margin-bottom: 20px;
+    }
+
+    .input-box {
+      width: 100%;
+      padding: 15px;
+      font-size: 18px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background-color: var(--input-bg);
+      color: var(--text-primary);
+      font-family: 'Courier New', monospace;
+    }
+
+    .input-box:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+    }
+
+    .progress-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .progress-text {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .progress-bar {
+      height: 8px;
+      flex-grow: 1;
+      background-color: var(--border);
+      border-radius: 4px;
+      margin: 0 15px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background-color: var(--accent);
+      border-radius: 4px;
+      transition: width 0.3s ease;
+    }
+
+    .stats {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 20px;
+      padding-top: 15px;
+      border-top: 1px solid var(--border);
+    }
+
+    .stat-item {
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 24px;
+      font-weight: bold;
+      color: var(--accent);
+    }
+
+    .stat-label {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .completion-message {
+      text-align: center;
+      padding: 30px;
+      font-size: 24px;
+      color: var(--correct);
+      font-weight: bold;
+    }
+
+    .keyboard {
+      margin-top: 30px;
+      padding: 15px;
+      background-color: var(--bg-secondary);
+      border-radius: 8px;
+      box-shadow: 0 4px 6px var(--shadow);
+    }
+
+    .keyboard-row {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 8px;
+    }
+
+    .key {
+      padding: 8px 12px;
+      margin: 0 3px;
+      background-color: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      min-width: 30px;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    .key-active {
+      background-color: var(--accent);
+      color: white;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 15px;
+      }
+      
+      .char {
+        font-size: 20px;
+        padding: 3px;
+        min-width: 16px;
+      }
+      
+      .input-box {
+        padding: 12px;
+        font-size: 16px;
+      }
+      
+      .key {
+        padding: 6px 8px;
+        min-width: 24px;
+        font-size: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Typing Tutor</h1>
+      <button class="theme-toggle" id="themeToggle">ðŸŒ™</button>
+    </header>
+
+    <div class="card">
+      <select id="chapterSelect" class="chapter-selector"></select>
+      <div id="lessonTitle" class="lesson-title"></div>
+      
+      <div class="lesson-container">
+        <div id="lesson"></div>
+      </div>
+      
+      <div class="input-container">
+        <input type="text" id="inputBox" class="input-box" placeholder="Start typing..." autofocus autocomplete="off" />
+      </div>
+      
+      <div class="progress-container">
+        <div id="progress" class="progress-text"></div>
+        <div class="progress-bar">
+          <div id="progressFill" class="progress-fill" style="width: 0%"></div>
+        </div>
+        <div id="accuracy" class="progress-text">100%</div>
+      </div>
+    </div>
+    
+    <div class="stats">
+      <div class="stat-item">
+        <div id="wpm" class="stat-value">0</div>
+        <div class="stat-label">WPM</div>
+      </div>
+      <div class="stat-item">
+        <div id="time" class="stat-value">0s</div>
+        <div class="stat-label">Time</div>
+      </div>
+      <div class="stat-item">
+        <div id="errors" class="stat-value">0</div>
+        <div class="stat-label">Errors</div>
+      </div>
+    </div>
+    
+    <div class="keyboard">
+      <div class="keyboard-row">
+        <div class="key" data-key="q">q</div>
+        <div class="key" data-key="w">w</div>
+        <div class="key" data-key="e">e</div>
+        <div class="key" data-key="r">r</div>
+        <div class="key" data-key="t">t</div>
+        <div class="key" data-key="y">y</div>
+        <div class="key" data-key="u">u</div>
+        <div class="key" data-key="i">i</div>
+        <div class="key" data-key="o">o</div>
+        <div class="key" data-key="p">p</div>
+      </div>
+      <div class="keyboard-row">
+        <div class="key" data-key="a">a</div>
+        <div class="key" data-key="s">s</div>
+        <div class="key" data-key="d">d</div>
+        <div class="key" data-key="f">f</div>
+        <div class="key" data-key="g">g</div>
+        <div class="key" data-key="h">h</div>
+        <div class="key" data-key="j">j</div>
+        <div class="key" data-key="k">k</div>
+        <div class="key" data-key="l">l</div>
+        <div class="key" data-key=";">;</div>
+      </div>
+      <div class="keyboard-row">
+        <div class="key" data-key="z">z</div>
+        <div class="key" data-key="x">x</div>
+        <div class="key" data-key="c">c</div>
+        <div class="key" data-key="v">v</div>
+        <div class="key" data-key="b">b</div>
+        <div class="key" data-key="n">n</div>
+        <div class="key" data-key="m">m</div>
+        <div class="key" data-key=",">,</div>
+        <div class="key" data-key=".">.</div>
+        <div class="key" data-key=" ">Space</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Course data from the JSON file
+    const lessons = [
+      {
+        "title": "Chapter 1: f, j and space",
+        "words": [
+          "jjf", "ff", "f   f", "j", "jjj", "jfj", "jf", "jjf", "f jj", "",
+          "jf jf", "j", "j  jj", "fff", "f", "j ff", "f", "j f", "ff", "jj",
+          "jj", "jj", "f  jj", "fffj", "j f j", "", "j", "f", "j j jj", "j j",
+          "j f f", "jf", "jf", "jf", "fjjj", "ff", "f j", "j f", "jj", "jj",
+          "jfjfff", "jf f", "j", "j", "f", "f  f", "jj f", "jf", "jjj", "jj fj",
+          "ff", "jf", "jfjf", "ff", "fj", "fff", "ff", "j f", "jff", "fjfffj"
+        ]
+      },
+      {
+        "title": "Chapter 2: u, r and k",
+        "words": [
+          "k k", "rj", "f r", "ru r", "fj", "uukujf", "jfk", "rk", "f fuk", "kjkr",
+          "u r", "uj", "kkrr", "k", "jjrrru", "ku", "r k", "kkuku", "uf", "jku ur",
+          "kf", "rkrku", "k", "fk", "r", "fujj", "r  jr", "ukj", "uk", "ukuk",
+          "fujj k", "j j", "jufrk", "rrkjkr", "j uf", "rj", "kr", "rf", "uf", "ff fff",
+          "ufuuj", "r jr", "rf fu", "fu ju", "rf", "rrjurr", "rrjuk", "fjj", "rfrf", "u u",
+          "rr  u", "uu", "fu f", "k fjrr", "rrr", "ujrrk", "rj f", "rf", "f fr", "uu"
+        ]
+      },
+      {
+        "title": "Chapter 3: d, e and i",
+        "words": [
+          "kjji", "erkj", "djker", "difde", "err", "dfi", "ki", "d kd", "ijuju", "kdi dj",
+          "rde", "kde j", "drff", "fdkji", "", "deir", "keuff", "dk", "jdru", "rkj du",
+          "idk k", "j fkd", "jri", "ji", "frudd", "jk", "jj", "uej i", "ji", "jefk",
+          "f", "kufe", "eu  ie", "uk j", "f  rjj", "jude", "uekuu", "fi iiu", "idfrdk", "uijku",
+          "ikruuj", "ffdkji", "fj", "uju", "krii", "idi", "jk", "jie f", "kf", "rie",
+          "rdje", "ijf", "ik", "ku", "dfkef", "d rkr", "d", "ef", "eurfju", "kr"
+        ]
+      },
+      {
+        "title": "Chapter 4: c, g and n",
+        "words": [
+          "fdd", "crrj", "nnudk", "ru", "k", "rc n", "g ni", "k g", "gdke", "jgck",
+          "ureur", "egr", "iffek", "cncd", "kffne", "fcfk", "unfdg", "duk jn", "ec", "e e",
+          "rk", "cjdif", "df", "efii", "kj", "j", "ejk", "cdk j", "ekrnc", "d c f",
+          "nefdek", "igec", "g ri", "cfucd", "rudgid", "un", "nijfkj", "dgnife", "knke", "kcr",
+          "ru", "cr", "kn ji", "kec u", "dujk", "fn", "gcuuun", "ki ugk", "ugeg", "gkdc",
+          "dunduf", "ek", "ecigi", "nkfgf", "ueudcd", "u rfue", "fd", "eufgi", "c dfr", "eeck"
+        ]
+      },
+      {
+        "title": "Beginner Review 1",
+        "words": [
+          "frri", "dkfrnj", "ki", "fr", "fd", "niun", "nf", "deu", "ifje", "nr",
+          "ufeej", "gjfeu", "dn", "kfjik", "", "igicu", "cd r", "niic", "juej", "iir",
+          "gdck", "rdekkg", "dd", "crnidr", "ner", "kgieu", "ire", "ek", "rdr", "ii",
+          "gkej", "gr", "ig", "c", "jued", "njffgc", "iije", "rfd rg", "ni", "egkic",
+          "ejn", "cfg", "nuj", "ucei", "nkiggf", "nkf", "djee", "fkkujr", "ngeigi", "ccg",
+          "kjn", "nnc", "irkudu", "cdic", "rgu d", "nkegdd", "juj", "ifku", "eede f", "jjkeek",
+          "nejccf", "ec", "kdf", "eguijc", "d", "nu", "c", "", "e", "rc", "kj f", "nfd",
+          "dgfgd", "uk j", "rnfjii", "nnk", "jkkfu", "r e", "ruifj", "kk"
+        ]
+      },
+      {
+        "title": "Chapter 6: t, s and l",
+        "words": [
+          "dknfc", "djkui", "l", "gf", "rtjdd", "e", "gdegf", "dfug", "jleeu", "i",
+          "krdi", "kjt", "dsc", "jrugkr", "jkukfi", "ss", "ge", "skulj", "sgkd", "ekdul",
+          "rkg", "ttuef", "ers", "jcljj", "tnffus", "etgu", "rl", "cel", "clrs", "rei",
+          "cciiuf", "tjcuk", "icskkk", "lkfcg", "stie", "js", "ul", "kl", "enesd", "eg",
+          "ikcnn", "iinisi", "ltfjgl", "fj", "lgnk", "kjuj", "ut", "gfstnu", "kcgc", "kt",
+          "stjr", "rj", "nj e", "klur", "if", "ui", "lstge", "dfrecj", "cndudk", "lt"
+        ]
+      },
+      {
+        "title": "Chapter 7: o, b and a",
+        "words": [
+          "irri e", "gl", "lotj", "udctj", "a ik", "fjl", "ofcnc", "bsurr", "ff sk", "an c",
+          "feftbg", "rs", "ne dgu", "dltdrn", "ka", "kar", "id", "ealo", "ajcs", "dbrkn",
+          "a", "nu", "tl dfg", "osrn", "sscfe", "olgr", "sacu", "kjou", "bgi", "kos",
+          "eiefii", "rjifj", "knl", "nst", "eal", "jo", "jccu", "eklba", "uub os", "ldtfs",
+          "rboofs", "flsb", "dukaj", "rasrt", "knnfu", "ek", "nlrc", "ik bgk", "ls", "lc",
+          "cru", "bb s", "sklo", "njtsab", "n ubro", "sa", "njlu", "bs", "ec", "redau"
+        ]
+      },
+      {
+        "title": "Chapter 8: v, m and h",
+        "words": [
+          "dmilm", "s", "ufv", "mvch", "hbs", "e oil", "siccuh", "eabinj", "dch", "ibvcru",
+          "oah", "jdi", "ohf", "ihofhe", "uftfe", "dsdl", "lvv", "jeo", "ju", "kn",
+          "tejhgs", "rb", "kc", "ofohk", "doaruo", "gohurc", "ddr", "ejoll", "bhi", "ca",
+          "dg", "vdg", "ediju", "irrnc", "cd", "triv", "jiblt", "l fl", "arss", "sdk",
+          "ogkst", "vktd", "bd", "bjjods", "grmi", "enmm", "irstl", "kkoc", "tb", "ug",
+          "kjbbf", "acvm", "rn", "jt", "b c", "elm", "fv", "ul", "eile", "cl"
+        ]
+      },
+      {
+        "title": "Chapter 9: period (.) and comma (,)",
+        "words": [
+          "fgbikf", "lvsg,.", "koke f", "im", "giu", "rahe", "jm mbl", "eoecfj", "jc fc", "vni",
+          "jjf.ed", "ldud", "diul", "vtu", "u", "gmola", "fk", "nlbs,t", "ke", "ha v",
+          "gj", "cvght", "ccv", "mi", "fd", "rst", "rg.", "uohav", "ghnenu", "lvfk",
+          ",hj", "csb c", "uufhm", "ccbsm", "t tg", "fvv", ",vsliv", "afg,tc", "iuhj", "bggh",
+          "cuk", "dlkfsh", "kf,mo", "kbug", "lh,c,n", "cod", ",ud,", "ailhbd", "bgj,", "lods",
+          "ibf", "ehmofh", "nj", "cro,d", ",njtc", "m.jv i", "h,e,m", "ctbrh", "vgvv", "na"
+        ]
+      },
+      {
+        "title": "Beginner Review 2",
+        "words": [
+          "tv", ",a", "n..", "smntoe", "trjfjo", "o.eh", "cubjtk", "sdue", "ub.e", "sv k",
+          "nru", "oebd,", "nvuu", "adnv", ".oc", "ikgsfi", "uvao,", "itln.", ".nj", "vs",
+          "eujs", "dlk", ",a", ".vvu", "bcn", "ks", ",ng", "lusv,k", "hl", ".hev",
+          "rrf", "dtoc", "ivulh", "m.noko", "mjjjc", "vaj", "strb", "ltrk", "rb", "tefg",
+          "meli,g", "jhkj", "egic,", "lflv", ",.oel", "jhvk", "bj", "bo,f", "uus", "bngk",
+          "mfslo", "gugato", "hvgo", ".gg", "vec", "bsjng", "em.o", "iloee", "ou", "bktoba",
+          "nnmln", "dko", "ch", "fci", "a.t,", "kjvaf,", "d.rrb.", ".sv", "ni.", "jnoij",
+          ", j iv", "tko", "buh", "cd", ".mo", "ht dgk", "vo,", "kig,", "lfrlj", "att.th"
+        ]
+      },
+      {
+        "title": "Chapter 11: w, x and ;",
+        "words": [
+          "w;.g,", "ngit", "ac", "wnc.ck", "x.ggvb", "lca", "embr", "ad", "s,mwh", "jv",
+          ";vsr;g", "teu", "sj", "fgw", "wilbg", ".i cnd", ";x", "uv", "id dj;", "g,",
+          "nid", "xb dto", "ichr", "wrfon", "mvt", "wmwac", "hhmk", "owfs", "xuabmx", ".v;uva",
+          "uao", "uul; e", "vah,,", "vog.", "inbin,", "w,", "nguohx", "lm", "jtm.kc", "wifb",
+          "bix", "gff;", "cvd,x", "lt.x", "vm,;", ";d;vmw", ",c", "uw", "usoe,", "rcg",
+          "autir", "xvhesg", "fvok", "sg", "gg,lg", "ccig.", "drdf", "h;jo,s", "hb;r", "hb"
+        ]
+      },
+      {
+        "title": "Chapter 12: q, y and p",
+        "words": [
+          "uxw", "hojvpl", "gdc", "hsaly", "t;", "njtepn", ";qxpr", "o;c.", "fk.,", "x",
+          "rvs", "e;hwwq", "mriae", "ofip", "fx", "lk;l", "fjo", "wo", "c;ulfx", "pn",
+          "nbvl", "tvfyjv", "xwx", "ep,", "arum", ";a", "ge", "xy", "ls", "mws",
+          "n", "sxtv", "aarf", "mxjq", "xhrq g", "vjfc b", "mwq", "qntyh", "bufrw", "msa",
+          "nh", "mtsjmw", "ivv", "dnuc", "nkfq", "ssgil", "ffgt,f", "tpjhbd", "rb", ",u",
+          "aw,r", "kl,", ";n.k.u", "msugh", ".,pa", "tlwmna", "e", "ao", "lo", "yol"
+        ]
+      },
+      {
+        "title": "Chapter 13: z and Enter key",
+        "words": [
+          ".nvwq", ",g", ";vgd", "xw", "cjy", "zc,", "pc", "rn", "j.ijox", "cdzd",
+          ";h", ",z", "c kly", "tk", "wobh", "gt", "syo", "b.", "hg", "oc",
+          "jv", "czpm", "p;k", ".yg", "sli", "bj,i", "hyd qi", "ENTERifks", ",eiy", "m;.uk",
+          "vhf", "nmdp", ";sjbll", "w;eo", "jc", "ewkg", "yjbc", "zsxg", "trru", "bf;xk",
+          "g.jal", "cq", "ub", "hmyz", "fcnvb,", "vscm", "pg", "utee", ";.xdc", "o.a",
+          "rENTER", ";gENTERys", "hkwbv", "unbav", "fdgibb", "wzenp", "rs", "s,g", "sENTERiljj", "ob"
+        ]
+      },
+      {
+        "title": "Beginner Wrap Up",
+        "words": [
+          "vud", "z y", "t  jp.", "cyob", "mzcy,a", "xemepx", "n.e", "yayza", "hcz", "up",
+          "bi", "nx", "gv", "fc", "ahwib", "fro", "ip;tds", "zieo", "fh", ",xar",
+          "xENTER", "bu", "gib,", "mu", "xqnkk", "hmy", "ijw", ";hfye", "tcvu", "hs",
+          "diyni", ",lz", "smo", ";wt;", ",u,qpb", "nozooENTER", "wopoyg", "jxtz", "b xdENTER", ",muwENTER",
+          "qhyq", "jjc;qe", "w ei,", ".r", "z;gk;", "bf", "f", "bapxnh", "jo ac", "lk",
+          "zu.q", "jik", "louk;", "qozrl", ".pl", "jszdl", "mzENTERkx", "ryi", "ewxcm", "gbf",
+          "r;", "g;ja;", "my q", "zjsg", "uil", "zENTER", "wkuj", "bt;vc", "a gu", "jz;ni",
+          "w;", "az", "wmgl", "fmpo,", "hkte", "jldmj", "em", ",s", "s", "liumdy",
+          "n,", "nfa", "db;", "awzs", "hxstr", "yiybv", ".,", "ibp,", ".ennqi", "klfmw",
+          "mpy,", ",k;y;", "jqc.", "bENTERl,ax", "ot", ".fh", "xb", "lxzt", "hliwv", "kdv",
+          "xme", "lxbq", "zr;h;o", "ecqn", "iw", "gnwtENTER", "jh", "jx rlx", "pi", "dgl",
+          ".zdks.", "cbb.w", "rmbnu", "gb.puz", "rs", "f;gENTER", "in", "eaop", "it", "mzzr"
+        ]
+      }
+    ];
+
+    let currentChapter = null;
+    let currentIndex = 0;
+    let startTime = null;
+    let errorCount = 0;
+    let totalKeystrokes = 0;
+    let correctKeystrokes = 0;
+    let timerInterval = null;
+
+    const lessonTitle = document.getElementById("lessonTitle");
+    const lessonDiv = document.getElementById("lesson");
+    const inputBox = document.getElementById("inputBox");
+    const progress = document.getElementById("progress");
+    const progressFill = document.getElementById("progressFill");
+    const accuracyDisplay = document.getElementById("accuracy");
+    const chapterSelect = document.getElementById("chapterSelect");
+    const themeToggle = document.getElementById("themeToggle");
+    const wpmDisplay = document.getElementById("wpm");
+    const timeDisplay = document.getElementById("time");
+    const errorsDisplay = document.getElementById("errors");
+    const keys = document.querySelectorAll('.key');
+
+    // Check for saved theme preference or respect OS preference
+    if (localStorage.getItem('theme') === 'dark' || 
+        (window.matchMedia('(prefers-color-scheme: dark)').matches && !localStorage.getItem('theme'))) {
+      document.body.classList.add('dark-mode');
+      themeToggle.textContent = 'â˜€ï¸';
+    }
+
+    // Theme toggle functionality
+    themeToggle.addEventListener('click', () => {
+      document.body.classList.toggle('dark-mode');
+      if (document.body.classList.contains('dark-mode')) {
+        themeToggle.textContent = 'â˜€ï¸';
+        localStorage.setItem('theme', 'dark');
+      } else {
+        themeToggle.textContent = 'ðŸŒ™';
+        localStorage.setItem('theme', 'light');
+      }
+    });
+
+    // Populate dropdown
+    lessons.forEach((ch, i) => {
+      let option = document.createElement("option");
+      option.value = i;
+      option.textContent = ch.title;
+      chapterSelect.appendChild(option);
+    });
+
+    loadChapter(0); // load first chapter
+
+    // Load chapter by index
+    function loadChapter(chIndex) {
+      // Reset stats
+      clearInterval(timerInterval);
+      startTime = null;
+      errorCount = 0;
+      totalKeystrokes = 0;
+      correctKeystrokes = 0;
+      updateStats();
+      
+      currentChapter = lessons[chIndex];
+      currentIndex = 0;
+      lessonTitle.textContent = currentChapter.title;
+      loadWord();
+      inputBox.disabled = false;
+      inputBox.value = "";
+      inputBox.focus();
+    }
+
+    // Load a word in lesson
+    function loadWord() {
+      lessonDiv.innerHTML = "";
+      let word = currentChapter.words[currentIndex];
+      for (let i = 0; i < word.length; i++) {
+        let span = document.createElement("span");
+        span.innerText = word[i];
+        span.classList.add("char");
+        lessonDiv.appendChild(span);
+      }
+      
+      const progressPercent = (currentIndex / currentChapter.words.length) * 100;
+      progressFill.style.width = `${progressPercent}%`;
+      progress.textContent = `${currentIndex + 1} / ${currentChapter.words.length}`;
+      inputBox.value = "";
+    }
+
+    // Update statistics
+    function updateStats() {
+      // Update WPM if enough time has passed
+      if (startTime) {
+        const elapsedTime = (Date.now() - startTime) / 1000; // in seconds
+        timeDisplay.textContent = `${Math.floor(elapsedTime)}s`;
+        
+        if (elapsedTime > 5) { // Only show WPM after 5 seconds
+          const minutes = elapsedTime / 60;
+          const wpm = Math.round((correctKeystrokes / 5) / minutes);
+          wpmDisplay.textContent = wpm;
+        }
+      }
+      
+      errorsDisplay.textContent = errorCount;
+      
+      // Update accuracy
+      if (totalKeystrokes > 0) {
+        const accuracy = Math.round((correctKeystrokes / totalKeystrokes) * 100);
+        accuracyDisplay.textContent = `${accuracy}%`;
+      } else {
+        accuracyDisplay.textContent = '100%';
+      }
+    }
+
+    // Start timer when user starts typing
+    function startTimer() {
+      if (!startTime) {
+        startTime = Date.now();
+        timerInterval = setInterval(updateStats, 1000);
+      }
+    }
+
+    // Highlight key on keyboard
+    function highlightKey(char, isActive) {
+      const keyElement = document.querySelector(`.key[data-key="${char.toLowerCase()}"]`);
+      if (keyElement) {
+        if (isActive) {
+          keyElement.classList.add('key-active');
+        } else {
+          keyElement.classList.remove('key-active');
+        }
+      }
+    }
+
+    // Typing event
+    inputBox.addEventListener('input', () => {
+      startTimer();
+      
+      let typed = inputBox.value;
+      let spans = lessonDiv.querySelectorAll('.char');
+      let word = currentChapter.words[currentIndex];
+      
+      // Highlight the current key
+      if (typed.length > 0) {
+        const currentChar = typed[typed.length - 1];
+        highlightKey(currentChar, true);
+        
+        // Remove highlight after short delay
+        setTimeout(() => highlightKey(currentChar, false), 100);
+      }
+
+      for (let i = 0; i < spans.length; i++) {
+        if (typed[i] == null) {
+          spans[i].classList.remove('correct', 'wrong');
+        } else if (typed[i] === spans[i].innerText) {
+          spans[i].classList.add('correct');
+          spans[i].classList.remove('wrong');
+        } else {
+          spans[i].classList.add('wrong');
+          spans[i].classList.remove('correct');
+        }
+      }
+
+      // Count keystrokes and errors
+      totalKeystrokes++;
+      if (typed.length > 0 && word.length >= typed.length) {
+        if (typed[typed.length - 1] === word[typed.length - 1]) {
+          correctKeystrokes++;
+        } else {
+          errorCount++;
+        }
+      }
+      updateStats();
+
+      // Word completed
+      if (typed === word) {
+        setTimeout(() => {
+          currentIndex++;
+          if (currentIndex < currentChapter.words.length) {
+            loadWord();
+          } else {
+            clearInterval(timerInterval);
+            lessonDiv.innerHTML = '<div class="completion-message">âœ… Lesson Complete!</div>';
+            inputBox.disabled = true;
+            progressFill.style.width = '100%';
+          }
+        }, 300);
+      }
+    });
+
+    // Handle backspace
+    inputBox.addEventListener('keydown', (e) => {
+      if (e.key === 'Backspace') {
+        let spans = lessonDiv.querySelectorAll('.char');
+        let typed = inputBox.value;
+        let i = typed.length;
+        if (spans[i]) {
+          spans[i].classList.remove('correct', 'wrong');
+        }
+      }
+    });
+
+    // Chapter change event
+    chapterSelect.addEventListener('change', (e) => {
+      loadChapter(parseInt(e.target.value));
+    });
+
+    // Prevent spacebar from scrolling page
+    window.addEventListener('keydown', function(e) {
+      if(e.keyCode == 32 && e.target == document.body) {
+        e.preventDefault();
+      }
+    });
+  </script>
+</body>
+</html>
